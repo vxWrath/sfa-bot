@@ -10,20 +10,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v9.0.0
         with:
           python-version: "3.14"
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group migrations
       - run: uv run ruff check
       - run: uv run ruff format --check
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.14"
-      - run: uv sync --group dev
       - run: uv run pyright
