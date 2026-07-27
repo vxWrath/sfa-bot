@@ -1,0 +1,52 @@
+[project]
+name = "peerless"
+version = "0.0.1"
+description = "Discord sports league management bot"
+requires-python = ">=3.14"
+dependencies = [
+    "uvloop>=0.22.1; sys_platform != 'win32'",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["files", "plans", "migrations", "deploy"]
+
+[dependency-groups]
+dev = ["ruff>=0.16.0", "pyright>=1.1.411"]
+migrations = ["alembic>=1.18.5", "psycopg[binary]>=3.3.4", "sqlalchemy>=2.0.51"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes (undefined names, unused imports, etc.)
+    "I",   # isort (import ordering)
+    "UP",  # pyupgrade (modernise syntax: use list/dict/X|Y instead of typing.List/Dict/Optional)
+    "B",   # flake8-bugbear (likely bugs and design issues)
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "E501",  # line too long - handled by line-length setting
+    "E731",  # do not assign a lambda expression, use a def
+    "F403",  # 'from module import *' used; unable to detect undefined names (common in __init__.py files)
+    "UP037", # remove quotes from annotations
+]
+
+[tool.ruff.lint.isort]
+known-first-party = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+
+[tool.pyright]
+pythonVersion = "3.14.6"
+typeCheckingMode = "basic"
+include = []
+exclude = ["**/node_modules", "**/.venv", "**/__pycache__", "**/.*"]
+venvPath = "."
+venv = ".venv"

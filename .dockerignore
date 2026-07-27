@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+.ruff_cache/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Node
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# Design docs / planning
+plans/
+files/
+
+# Schema (not needed at runtime)
+.dbml
+
+# CI
+.github/
+
+# Environment
+.env
+.env.*
+
+# Misc
+*.md
+.claude/
+.gitnexus/
+
+# Deploy manifests (not needed inside the image)
+deploy/

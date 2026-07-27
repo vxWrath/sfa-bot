@@ -1,0 +1,243 @@
+Table player {
+  snowflake bigint [pk, note: "Discord user snowflake"]
+  roblox_id bigint [null, note: "primary linked Roblox account. retrieved from bloxlink API"]
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table team {
+  id bigint [pk, increment]
+  role_snowflake bigint [null]
+  role_name text [not null]
+
+  division int [null]
+  subdivision int [null]
+  gsp int [null]
+
+  is_active boolean [not null]
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table coach {
+  id bigint [pk, increment]
+
+  role_snowflake bigint
+  role_name text [not null]
+  acronym text [not null]
+  sort_index int
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table team_owner {
+  id bigint [pk, increment]
+
+  player_snowflake bigint [not null, ref: > player.snowflake, note: "ON DELETE CASCADE"]
+  team_id bigint [not null, ref: > team.id, note: "ON DELETE CASCADE"]
+
+  appointed_at timestamptz [not null]
+  unappointed_at timestamptz
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table season {
+  id bigint [pk, increment]
+  season_number int [not null]
+  current_stage int [not null, default: 1, note: "enum: 1=GROUP_1, 2=GROUP_2, 3=GROUP_3, 4=GROUP_4, 5=GROUP_5, 6=PLAYOFFS_R1, 7=PLAYOFFS_QF, 8=PLAYOFFS_SF, 9=PLAYOFFS_FINAL"]
+
+  is_playoffs boolean [not null, default: false, note: "true when current_stage >= 6"]
+
+  is_active boolean [not null, default: true]
+  version int [not null, default: 1, note: "optimistic concurrency"]
+
+  started_at timestamptz
+  ended_at timestamptz
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table team_season_stage {
+  id bigint [pk, increment]
+  season_id bigint [not null, ref: > season.id, note: "ON DELETE CASCADE"]
+  team_id bigint [not null, ref: > team.id, note: "ON DELETE CASCADE"]
+  stage int [not null, note: "1-9: 1-5=group stages, 6-9=playoff rounds"]
+
+  division int [null, note: "D1-D4 during group stages. null during playoffs"]
+  subdivision text [null, note: "'A' or 'B' during group stages. null during playoffs"]
+  gsp int [null, note: "Group Standing Position (1-4). null during playoffs"]
+
+  is_play_in bool [null, note: "true if GS5 play-in group. null for non-GS5 stages"]
+  is_auto_qualified bool [null, note: "true if auto-qualified for playoffs (SP seeds 1-4). null for non-playoff stages"]
+  is_champion bool [not null, default: false]
+
+  is_finished bool
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (season_id, team_id, stage) [unique, name: "idx_season_team_unique"]
+    (season_id, stage) [name: "idx_season_team_stage"]
+    team_id [name: "idx_season_team_team"]
+  }
+}
+
+Table game {
+  id bigint [pk, increment]
+  season_id bigint [not null, ref: > season.id, note: "ON DELETE CASCADE"]
+
+  home_team_id bigint [null, ref: > team.id, note: "ON DELETE SET NULL"]
+  away_team_id bigint [null, ref: > team.id, note: "ON DELETE SET NULL"]
+
+  home_score int
+  away_score int
+
+  is_forfeit boolean [not null]
+  is_double_forfeit boolean [not null]
+  forfeit_by_home boolean [null]
+  forfeit_by_away boolean [null]
+
+  stage int [not null, note: "1-5=group stages, 6-9=playoff rounds"]
+  division int [null, note: "null during playoffs"]
+  subdivision int [null, note: "null during playoffs"]
+  week int [null, note: "null during playoffs"]
+
+  scheduled_for timestamptz [not null]
+  thread_snowflake bigint [not null]
+  referee_snowflakes jsonb [not null]
+  streamers jsonb [not null, note: "streamer snowflake: streamer URL"]
+
+  reporter_snowflake bigint [not null, ref: > player.snowflake, note: "ON DELETE RESTRICT"]
+  reported_at timestamptz [not null]
+
+  approver_snowflake bigint [ref: > player.snowflake, note: "ON DELETE RESTRICT"]
+  approved_at timestamptz
+
+  version int [not null, note: "optimistic concurrency"]
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    home_team_id [name: "idx_game_home_team"]
+    away_team_id [name: "idx_game_away_team"]
+    season_id [name: "idx_game_season"]
+    (season_id, home_team_id) [name: "idx_game_season_home"]
+    (season_id, away_team_id) [name: "idx_game_season_away"]
+  }
+}
+
+Table player_stat {
+  id bigint [pk, increment]
+
+  game_id bigint [not null, ref: > game.id, note: "ON DELETE CASCADE"]
+  season_id bigint [ref: > season.id, note: "ON DELETE SET NULL"]
+  team_id bigint [not null, ref: > team.id, note: "ON DELETE CASCADE"]
+
+  roblox_id bigint [not null]
+  player_snowflake bigint [null, ref: > player.snowflake, note: "ON DELETE SET NULL"]
+
+  quarterback jsonb [null]
+  rushing jsonb [null]
+  receiver jsonb [null]
+  corner jsonb [null]
+  defender jsonb [null]
+  kicker jsonb [null]
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (game_id, team_id, roblox_id) [name: "idx_player_stat_box_score"]
+    roblox_id [name: "idx_player_stat_roblox"]
+    season_id [name: "idx_player_stat_season"]
+  }
+}
+
+Table contract {
+  id bigint [pk, increment]
+  player_snowflake bigint [not null, ref: > player.snowflake, note: "ON DELETE RESTRICT"]
+  team_id bigint [not null, ref: > team.id, note: "ON DELETE CASCADE"]
+
+  amount decimal
+  notes text [not null]
+  length int [not null]
+  length_type int [not null, note: "enum: 0=games, 1=weeks, 2=months, 3=seasons"]
+
+  started_at timestamptz
+  expires_at timestamptz
+
+  terminated_at timestamptz
+  termination_justification jsonb
+
+  is_active boolean [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (player_snowflake, is_active) [name: "idx_contract_player_active"]
+    team_id [name: "idx_contract_team"]
+  }
+}
+
+Table award {
+  id bigint [pk, increment]
+  season_id bigint [null, ref: > season.id, note: "ON DELETE CASCADE  nullable for HOF-style awards"]
+
+  name text [not null]
+  category text [not null]
+  description text [not null]
+  role_snowflake bigint [note: "optional Discord role for award holders"]
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table award_assignment {
+  id bigint [pk, increment]
+  award_id bigint [not null, ref: > award.id, note: "ON DELETE CASCADE"]
+
+  player_snowflake bigint [null, ref: > player.snowflake, note: "ON DELETE CASCADE"]
+  team_id bigint [null, ref: > team.id, note: "ON DELETE CASCADE"]
+
+  created_at timestamptz [not null]
+
+  Indexes {
+    award_id [name: "idx_award_assign_award"]
+    player_snowflake [name: "idx_award_assign_player"]
+    team_id [name: "idx_award_assign_team"]
+    (award_id, player_snowflake) [unique, name: "idx_award_assign_unique_player", note: "WHERE player_snowflake IS NOT NULL"]
+    (award_id, team_id) [unique, name: "idx_award_assign_unique_team", note: "WHERE team_id IS NOT NULL"]
+  }
+}
+
+Table player_sanction {
+  id bigint [pk, increment]
+  player_snowflake bigint [not null, ref: > player.snowflake, note: "ON DELETE CASCADE"]
+
+  sanction_type int [not null, note: "enum: 0=suspension, 1=team owner blacklist"]
+  moderator_snowflake bigint [ref: > player.snowflake, note: "ON DELETE SET NULL"]
+
+  sanctioned_until timestamptz
+  sanctioned_at timestamptz
+  justification jsonb
+  banned_until timestamptz
+
+  is_active boolean [not null]
+
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (player_snowflake, sanction_type) [name: "idx_sanction_player_type"]
+    (is_active) [name: "idx_sanction_active"]
+    (sanction_type, is_active) [name: "idx_sanction_type_active"]
+  }
+}
