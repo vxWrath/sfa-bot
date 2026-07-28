@@ -1,6 +1,6 @@
 from .award import *
 from .award_assignment import *
-from .base import Base  # noqa
+from .base import *
 from .coach import *
 from .contract import *
 from .game import *

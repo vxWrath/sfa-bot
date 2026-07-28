@@ -22,8 +22,10 @@ def get_stage() -> str:
     stage = get_env("STAGE", "dev").lower()
     return stage.casefold()
 
+
 def is_production() -> bool:
     return get_stage() == "prod"
+
 
 def is_dev() -> bool:
     return get_stage() != "prod"

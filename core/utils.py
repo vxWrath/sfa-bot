@@ -1,5 +1,5 @@
 import asyncio
-from typing import Awaitable
+from collections.abc import Awaitable
 
 from core import get_logger
 

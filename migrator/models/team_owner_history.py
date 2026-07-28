@@ -1,14 +1,14 @@
-from sqlalchemy import BigInteger, Column, ForeignKey
+from sqlalchemy import BigInteger, Boolean, Column, ForeignKey
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from .base import Base
 
 __all__ = [
-    "TeamOwner",
+    "TeamOwnerHistory",
 ]
 
 
-class TeamOwner(Base):
+class TeamOwnerHistory(Base):
     """Ownership change log - tracks who owned a team and when."""
 
     __tablename__ = "team_owner"
@@ -20,6 +20,7 @@ class TeamOwner(Base):
 
     appointed_at = Column(TIMESTAMP(timezone=True), nullable=False)
     unappointed_at = Column(TIMESTAMP(timezone=True))
+    is_active = Column(Boolean, nullable=False)
 
     created_at = Column(TIMESTAMP(timezone=True), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
