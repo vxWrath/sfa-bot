@@ -5,6 +5,14 @@ description = "Discord sports league management bot"
 requires-python = ">=3.14"
 dependencies = [
     "uvloop>=0.22.1; sys_platform != 'win32'",
+    "discord.py[speed]>=2.7.1",
+    "asyncpg>=0.31.0",
+    "redis[hiredis]>=8.0.1",
+    "structlog>=26.1.0",
+    "msgspec>=0.21.1",
+    "structhook>=0.5.0",
+    "orjson>=3.11.9",
+    "tomli-w>=1.2.0",
 ]
 
 [tool.setuptools.packages.find]

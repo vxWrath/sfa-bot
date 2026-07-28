@@ -1,0 +1,82 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: sfa
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: sfa
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sfa"]
+      interval: 5s
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  bot:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@postgres:{POSTGRES_PORT}/{POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:{REDIS_PORT}/{REDIS_DB}
+    volumes:
+      - ./config.toml:/app/config.toml:ro
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    command:
+      - "--path.rootfs=/host"
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    restart: unless-stopped
+
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    environment:
+      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
+    restart: unless-stopped
+
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_ADDR: redis://${REDIS_HOST}:${REDIS_PORT}
+      REDIS_DB: ${REDIS_DB}
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  prometheus_data:

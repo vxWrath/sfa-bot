@@ -49,3 +49,6 @@ htmlcov/
 
 # Node (for Tailwind CSS compilation)
 node_modules/
+
+# Config files
+config.toml

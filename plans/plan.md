@@ -161,7 +161,7 @@ Each cog delegates to its service layer. Services contain the actual logic and d
 
 ### 2. Standings Points (SP) Calculation
 
-SP determines playoff qualification. It is calculated per-game and summed per-stage. **SP is computed on-the-fly from game scores — it is not stored in the database.** The `team_season_stage.gsp` column records the Group Standing Position after stage completion, which is the only persisted SP-related value.
+SP determines playoff qualification. It is calculated per-game and summed per-stage. **SP is computed on-the-fly from game scores - it is not stored in the database.** The `team_season_stage.gsp` column records the Group Standing Position after stage completion, which is the only persisted SP-related value.
 
 **Base SP by division:**
 | Division | Win SP | Loss SP | Minimum SP per Stage |
