@@ -10,6 +10,7 @@ COPY pyproject.toml ./
 RUN uv sync --no-dev
 
 # Copy application code
+COPY core/ ./core/
 COPY sfa_bot/ ./sfa_bot/
 COPY config.toml ./
 

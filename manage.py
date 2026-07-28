@@ -1,13 +1,13 @@
 """SFA Bot management script.
 
-Usage: python manage.py <command>
+Usage: python manage.py <command> [target]
 
 Commands:
-  start     Build and start all services (docker compose up -d).
-  stop      Stop all services (docker compose stop).
-  down      Tear down services, keep volumes (docker compose down).
-  remove    Tear down services and delete volumes (docker compose down -v).
-  migrate   Run Alembic migrations.
+  start [infra|bot]   Start services (all when no target given).
+  stop [infra|bot]    Stop services (all when no target given).
+  down                Tear down all services, keep volumes.
+  remove              Tear down all services and delete volumes.
+  migrate             Run Alembic migrations.
 
 Migrate sub-commands:
   python manage.py migrate upgrade              Apply pending migrations.
@@ -24,9 +24,14 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import NoReturn
 
 ROOT = Path(__file__).resolve().parent
 MIGRATOR_DIR = ROOT / "migrator"
+
+INFRA_SERVICES = ["postgres", "redis", "prometheus", "node_exporter", "postgres_exporter", "redis_exporter"]
+BOT_SERVICES = ["bot"]
+ALL_SERVICES = [*INFRA_SERVICES, *BOT_SERVICES]
 
 RESET = "\033[0m"
 CYAN = "\033[1;36m"
@@ -34,10 +39,10 @@ GREEN = "\033[32m"
 RED = "\033[31m"
 
 COMMANDS: dict[str, str] = {
-    "start": "Build and start all services",
-    "stop": "Stop all services",
-    "down": "Tear down services, keep volumes",
-    "remove": "Tear down services and delete volumes",
+    "start": "Start services (infra / bot / all)",
+    "stop": "Stop services (infra / bot / all)",
+    "down": "Tear down all services, keep volumes",
+    "remove": "Tear down all services and delete volumes",
     "migrate": "Run Alembic migrations",
 }
 
@@ -63,7 +68,7 @@ class Manager:
         print(f"  {GREEN}✓{RESET} {msg}")
 
     @staticmethod
-    def fail(msg: str) -> None:
+    def fail(msg: str) -> NoReturn:
         print(f"  {RED}✗{RESET} {msg}")
         sys.exit(1)
 
@@ -128,27 +133,42 @@ class Manager:
 
         return f"postgresql://{user}:{password}@localhost:{port}/{db}"
 
+    @staticmethod
+    def resolve_target(target: str | None) -> list[str]:
+        """Map ``infra`` / ``bot`` / ``None`` to a list of service names."""
+        if target is None:
+            return ALL_SERVICES
+        if target == "infra":
+            return INFRA_SERVICES
+        if target == "bot":
+            return BOT_SERVICES
+        Manager.fail(f"Unknown target: {target}.  Use 'infra' or 'bot'.")
+
     # -- commands --------------------------------------------------------------
 
-    def start(self) -> None:
-        """Build and start all services in detached mode."""
-        Manager.compose("up", "--build", "-d")
-        Manager.ok("Services started")
+    def start(self, target: str | None = None) -> None:
+        """Start services (all when no target given)."""
+        services = self.resolve_target(target)
+        label = target or "all"
+        self.compose("up", "--build", "-d", *services)
+        self.ok(f"Started ({label})")
 
-    def stop(self) -> None:
-        """Stop all services without removing containers."""
-        Manager.compose("stop")
-        Manager.ok("Services stopped")
+    def stop(self, target: str | None = None) -> None:
+        """Stop services (all when no target given)."""
+        services = self.resolve_target(target)
+        label = target or "all"
+        self.compose("stop", *services)
+        self.ok(f"Stopped ({label})")
 
     def down(self) -> None:
-        """Tear down services, keep named volumes."""
-        Manager.compose("down")
-        Manager.ok("Services torn down (volumes kept)")
+        """Tear down all services, keep named volumes."""
+        self.compose("down")
+        self.ok("Services torn down (volumes kept)")
 
     def remove(self) -> None:
-        """Tear down services and delete all named volumes."""
-        Manager.compose("down", "-v")
-        Manager.ok("Services and volumes removed")
+        """Tear down all services and delete named volumes."""
+        self.compose("down", "-v")
+        self.ok("Services and volumes removed")
 
     def migrate(self, args: list[str]) -> None:
         """Run an Alembic command against the project database."""
@@ -182,7 +202,7 @@ class Manager:
 
             self.run([*base, "revision", "--autogenerate", "-m", args[1]], env=env)
 
-        Manager.ok("Migration command complete")
+        self.ok("Migration command complete")
 
 
 # -- cli -----------------------------------------------------------------------
@@ -203,14 +223,18 @@ def main() -> None:
     if cmd_name not in COMMANDS:
         print(f"Unknown command: {cmd_name}")
         print(f"Available: {', '.join(COMMANDS)}")
-
         sys.exit(1)
 
     manager = Manager()
     handler = getattr(manager, cmd_name)
 
-    # migrate is the only command that takes sub-arguments
-    if cmd_name == "migrate":
+    if cmd_name in ("start", "stop"):
+        target = sys.argv[2] if len(sys.argv) > 2 else None
+        if target not in (None, "infra", "bot"):
+            print(f"Unknown target: {target}.  Use 'infra' or 'bot'.")
+            sys.exit(1)
+        handler(target)
+    elif cmd_name == "migrate":
         handler(sys.argv[2:])
     else:
         handler()

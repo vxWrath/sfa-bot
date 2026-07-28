@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: sfa
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sfa"]
       interval: 5s
@@ -59,7 +59,7 @@ services:
       - "--path.rootfs=/host"
     pid: host
     volumes:
-      - /:/host:ro,rslave
+      - /:/host:ro
     restart: unless-stopped
 
   postgres_exporter:
