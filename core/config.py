@@ -41,7 +41,7 @@ class League:
         """Write current class variables back to ``config.toml``."""
         if not keys:
             raise ValueError("League.save() requires at least one key")
-        
+
         data = {key: getattr(cls, key) for key in keys}
 
         with open("config.toml", "wb") as f:

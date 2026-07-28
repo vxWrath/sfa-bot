@@ -12,6 +12,7 @@ __all__ = ["get_logger", "is_dev_mode"]
 
 IS_ROOT_CONFIGURED: bool = False
 
+
 def configure_root_logger(*, force: bool = False) -> None:
     """Configure structlog for the bot process.
 
@@ -19,10 +20,10 @@ def configure_root_logger(*, force: bool = False) -> None:
     ``False`` for JSON output suitable for log aggregation.
     """
     global IS_ROOT_CONFIGURED
-    
+
     if IS_ROOT_CONFIGURED and not force:
         return
-    
+
     shared_processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
@@ -35,8 +36,8 @@ def configure_root_logger(*, force: bool = False) -> None:
         renderer = structlog.processors.JSONRenderer()
 
     structlog.configure(
-        processors=shared_processors
-        + [
+        processors=[
+            *shared_processors,
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -61,7 +62,8 @@ def configure_root_logger(*, force: bool = False) -> None:
     root.setLevel(logging.INFO)
 
     IS_ROOT_CONFIGURED = True
-    
+
+
 original_excepthook = None
 original_loop_exception_handler = None
 installed_excepthook: bool = False
@@ -126,20 +128,22 @@ def install_asyncio_exception_handler() -> None:
     loop.set_exception_handler(handle_exception)
     installed_asyncio_handler = True
 
+
 def get_logger(name: str, *, level: int | None = logging.INFO) -> logging.Logger:
     if not IS_ROOT_CONFIGURED:
         configure_root_logger()
-        
+
     logger = logging.getLogger(name)
-    
+
     if level is not None:
         logger.setLevel(level)
     else:
         # Inherit root level so propagation works
         logger.setLevel(logging.NOTSET)
-        
+
     logger.propagate = True
     return logger
+
 
 def is_dev_mode() -> bool:
     val = os.environ.get("SFA_ENV", "development")

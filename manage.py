@@ -92,19 +92,19 @@ class Manager:
         """Read ``.env`` into a dict (no interpolation)."""
         result: dict[str, str] = {}
         env_file = ROOT / ".env"
-        
+
         if not env_file.exists():
             return result
-        
+
         for line in env_file.read_text().splitlines():
             line = line.strip()
-            
+
             if not line or line.startswith("#") or "=" not in line:
                 continue
-            
+
             key, _, value = line.partition("=")
             result[key] = value.strip().strip('"').strip("'")
-            
+
         return result
 
     @staticmethod
@@ -154,14 +154,14 @@ class Manager:
         """Run an Alembic command against the project database."""
         if not args or args[0] not in MIGRATE_SUBCOMMANDS:
             print("Available migrate sub-commands:")
-            
+
             for name, desc in MIGRATE_SUBCOMMANDS.items():
                 print(f"  {name:<12}  {desc}")
-                
+
             sys.exit(1)
 
         base = ["alembic", "-c", str(MIGRATOR_DIR / "alembic.ini")]
-        
+
         env = os.environ.copy()
         env["DATABASE_URL"] = self.migration_url()
 
@@ -169,17 +169,17 @@ class Manager:
 
         if subcmd == "upgrade":
             self.run([*base, "upgrade", "head"], env=env)
-            
+
         elif subcmd == "current":
             self.run([*base, "current"], env=env)
-            
+
         elif subcmd == "history":
             self.run([*base, "history"], env=env)
-            
+
         elif subcmd == "generate":
             if len(args) < 2:
                 self.fail("migrate generate requires a message")
-                
+
             self.run([*base, "revision", "--autogenerate", "-m", args[1]], env=env)
 
         Manager.ok("Migration command complete")
@@ -192,10 +192,10 @@ def main() -> None:
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         print(__doc__)
         print("Available commands:")
-        
+
         for name, desc in COMMANDS.items():
             print(f"  {name:<10}  {desc}")
-            
+
         sys.exit(0)
 
     cmd_name = sys.argv[1]
@@ -203,7 +203,7 @@ def main() -> None:
     if cmd_name not in COMMANDS:
         print(f"Unknown command: {cmd_name}")
         print(f"Available: {', '.join(COMMANDS)}")
-        
+
         sys.exit(1)
 
     manager = Manager()
