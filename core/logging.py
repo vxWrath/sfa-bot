@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-__all__ = ["get_logger", "install_asyncio_exception_handler", "install_excepthook", "is_dev_mode"]
+__all__ = ["get_logger", "install_asyncio_exception_handler", "install_excepthook"]
 
 IS_ROOT_CONFIGURED: bool = False
 
@@ -30,7 +30,7 @@ def configure_root_logger(*, force: bool = False) -> None:
         structlog.processors.TimeStamper(fmt="iso"),
     ]
 
-    if is_dev_mode():
+    if _is_dev_mode():
         renderer = structlog.dev.ConsoleRenderer()
     else:
         renderer = structlog.processors.JSONRenderer()
@@ -145,6 +145,6 @@ def get_logger(name: str, *, level: int | None = logging.INFO) -> logging.Logger
     return logger
 
 
-def is_dev_mode() -> bool:
+def _is_dev_mode() -> bool:
     val = os.environ.get("SFA_ENV", "development")
-    return val.casefold() == "development"
+    return val.casefold() != "prod"
