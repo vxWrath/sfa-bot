@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from ..models import ContractRow, TeamProfile
+from ..models import TeamProfile
 
 if TYPE_CHECKING:
     from ..database import Database

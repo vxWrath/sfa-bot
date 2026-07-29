@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from ..models import GameProfile, GameRow
+from ..models import GameProfile
 
 if TYPE_CHECKING:
     from ..database import Database
