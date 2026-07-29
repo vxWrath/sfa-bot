@@ -1,15 +1,13 @@
 import datetime
 
-from structhook import field
-
-from .base import DatabaseModel
+from msgspec import Struct, field
 
 __all__ = [
-    "Coach",
+    "CoachRow",
 ]
 
 
-class Coach(DatabaseModel):
+class CoachRow(Struct, dict=True, kw_only=True):
     """Person-based coaching staff."""
 
     id: int

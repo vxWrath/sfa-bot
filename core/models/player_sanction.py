@@ -1,15 +1,14 @@
 import datetime
+from typing import Any
 
-from structhook import DotDict, field
-
-from .base import DatabaseModel
+from msgspec import Struct, field
 
 __all__ = [
-    "PlayerSanction",
+    "PlayerSanctionRow",
 ]
 
 
-class PlayerSanction(DatabaseModel):
+class PlayerSanctionRow(Struct, dict=True, kw_only=True):
     """Suspensions and team-owner blacklists.
 
     sanction_type enum: 0=suspension, 1=team owner blacklist
@@ -23,7 +22,7 @@ class PlayerSanction(DatabaseModel):
 
     sanctioned_until: datetime.datetime | None = field(default=None)
     sanctioned_at: datetime.datetime | None = field(default=None)
-    justification: DotDict | None = field(default=None)
+    justification: dict[str, Any] | None = field(default=None)
     banned_until: datetime.datetime | None = field(default=None)
 
     is_active: bool

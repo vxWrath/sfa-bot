@@ -1,11 +1,13 @@
 import datetime
 
-from structhook import field
+from msgspec import Struct, field
 
-from .base import DatabaseModel
+__all__ = [
+    "TeamOwnerHistoryRow",
+]
 
 
-class TeamOwnerHistory(DatabaseModel):
+class TeamOwnerHistoryRow(Struct, dict=True, kw_only=True):
     """Ownership change log - tracks who owned a team and when."""
 
     id: int

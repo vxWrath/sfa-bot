@@ -1,19 +1,13 @@
 import datetime
 
-from structhook import DotDict, field
-
-from .award import Award
-from .base import DatabaseModel
-from .game import Game
-from .player_stat import PlayerStat
-from .team_season_stage import TeamSeasonStage
+from msgspec import Struct, field
 
 __all__ = [
-    "Season",
+    "SeasonRow",
 ]
 
 
-class Season(DatabaseModel):
+class SeasonRow(Struct, dict=True, kw_only=True):
     """Season & stage tracking.
 
     current_stage enum:
@@ -35,8 +29,3 @@ class Season(DatabaseModel):
 
     created_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
     updated_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
-
-    awards: DotDict[int, Award] = field(default_factory=DotDict, exclude=True)
-    games: DotDict[int, Game] = field(default_factory=DotDict, exclude=True)
-    player_stats: DotDict[int, PlayerStat] = field(default_factory=DotDict, exclude=True)
-    team_stages: DotDict[int, TeamSeasonStage] = field(default_factory=DotDict, exclude=True)

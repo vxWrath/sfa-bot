@@ -1,15 +1,14 @@
 import datetime
+from typing import Any
 
-from structhook import DotDict, field
-
-from .base import DatabaseModel
+from msgspec import Struct, field
 
 __all__ = [
-    "Contract",
+    "ContractRow",
 ]
 
 
-class Contract(DatabaseModel):
+class ContractRow(Struct, dict=True, kw_only=True):
     """Active roster contract record.
 
     length_type enum: 0=games, 1=weeks, 2=months, 3=seasons
@@ -28,7 +27,7 @@ class Contract(DatabaseModel):
     expires_at: datetime.datetime | None = field(default=None)
 
     terminated_at: datetime.datetime | None = field(default=None)
-    termination_justification: DotDict | None = field(default=None)
+    termination_justification: dict[str, Any] | None = field(default=None)
 
     is_active: bool
     created_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))

@@ -10,7 +10,6 @@ dependencies = [
     "redis[hiredis]>=8.0.1",
     "structlog>=26.1.0",
     "msgspec>=0.21.1",
-    "structhook>=0.5.0",
     "orjson>=3.11.9",
     "tomli-w>=1.2.0",
 ]

@@ -1,21 +1,13 @@
 import datetime
 
-from structhook import DotDict, field
-
-from .award_assignment import AwardAssignment
-from .base import DatabaseModel
-from .contract import Contract
-from .game import Game
-from .player_stat import PlayerStat
-from .team_owner_history import TeamOwnerHistory
-from .team_season_stage import TeamSeasonStage
+from msgspec import Struct, field
 
 __all__ = [
-    "Team",
+    "TeamRow",
 ]
 
 
-class Team(DatabaseModel):
+class TeamRow(Struct, dict=True, kw_only=True):
     """Franchise with division tracking."""
 
     id: int
@@ -30,11 +22,3 @@ class Team(DatabaseModel):
 
     created_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
     updated_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
-
-    award_assignments: DotDict[int, AwardAssignment] = field(default_factory=DotDict, exclude=True)
-    contracts: DotDict[int, Contract] = field(default_factory=DotDict, exclude=True)
-    home_games: DotDict[int, Game] = field(default_factory=DotDict, exclude=True)
-    away_games: DotDict[int, Game] = field(default_factory=DotDict, exclude=True)
-    player_stats: DotDict[int, PlayerStat] = field(default_factory=DotDict, exclude=True)
-    owner_history: DotDict[int, TeamOwnerHistory] = field(default_factory=DotDict, exclude=True)
-    season_stages: DotDict[int, TeamSeasonStage] = field(default_factory=DotDict, exclude=True)

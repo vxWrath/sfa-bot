@@ -1,15 +1,13 @@
 import datetime
 
-from structhook import field
-
-from .base import DatabaseModel
+from msgspec import Struct, field
 
 __all__ = [
-    "TeamSeasonStage",
+    "TeamSeasonStageRow",
 ]
 
 
-class TeamSeasonStage(DatabaseModel):
+class TeamSeasonStageRow(Struct, dict=True, kw_only=True):
     """Per-stage snapshot: division, playoff round, or championship placement.
 
     One row per team per season per stage (1-9).

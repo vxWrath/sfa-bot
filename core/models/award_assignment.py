@@ -1,15 +1,13 @@
 import datetime
 
-from structhook import field
-
-from .base import DatabaseModel
+from msgspec import Struct, field
 
 __all__ = [
-    "AwardAssignment",
+    "AwardAssignmentRow",
 ]
 
 
-class AwardAssignment(DatabaseModel):
+class AwardAssignmentRow(Struct, dict=True, kw_only=True):
     """Awards granted to players or teams."""
 
     id: int

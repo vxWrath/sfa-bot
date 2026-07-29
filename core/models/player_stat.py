@@ -1,15 +1,14 @@
 import datetime
+from typing import Any
 
-from structhook import DotDict, field
-
-from .base import DatabaseModel
+from msgspec import Struct, field
 
 __all__ = [
-    "PlayerStat",
+    "PlayerStatRow",
 ]
 
 
-class PlayerStat(DatabaseModel):
+class PlayerStatRow(Struct, dict=True, kw_only=True):
     """Per-player per-game position stats stored as JSONB."""
 
     id: int
@@ -21,12 +20,12 @@ class PlayerStat(DatabaseModel):
     roblox_id: int
     player_snowflake: int | None = field(default=None)
 
-    quarterback: DotDict | None = field(default=None)
-    rushing: DotDict | None = field(default=None)
-    receiver: DotDict | None = field(default=None)
-    corner: DotDict | None = field(default=None)
-    defender: DotDict | None = field(default=None)
-    kicker: DotDict | None = field(default=None)
+    quarterback: dict[str, Any] | None = field(default=None)
+    rushing: dict[str, Any] | None = field(default=None)
+    receiver: dict[str, Any] | None = field(default=None)
+    corner: dict[str, Any] | None = field(default=None)
+    defender: dict[str, Any] | None = field(default=None)
+    kicker: dict[str, Any] | None = field(default=None)
 
     created_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
     updated_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))

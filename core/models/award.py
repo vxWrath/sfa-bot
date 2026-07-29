@@ -1,16 +1,13 @@
 import datetime
 
-from structhook import DotDict, field
-
-from .award_assignment import AwardAssignment
-from .base import DatabaseModel
+from msgspec import Struct, field
 
 __all__ = [
-    "Award",
+    "AwardRow",
 ]
 
 
-class Award(DatabaseModel):
+class AwardRow(Struct, dict=True, kw_only=True):
     """Custom awards - can be seasonal or HOF-style (no season)."""
 
     id: int
@@ -22,5 +19,3 @@ class Award(DatabaseModel):
 
     created_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
     updated_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
-
-    assignments: DotDict[int, AwardAssignment] = field(default_factory=DotDict, exclude=True)

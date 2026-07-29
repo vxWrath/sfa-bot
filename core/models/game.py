@@ -1,16 +1,13 @@
 import datetime
 
-from structhook import DotDict, field
-
-from .base import DatabaseModel
-from .player_stat import PlayerStat
+from msgspec import Struct, field
 
 __all__ = [
-    "Game",
+    "GameRow",
 ]
 
 
-class Game(DatabaseModel):
+class GameRow(Struct, dict=True, kw_only=True):
     """Match results with referees, streamers, and score reporting."""
 
     id: int
@@ -34,8 +31,8 @@ class Game(DatabaseModel):
 
     scheduled_for: datetime.datetime
     thread_snowflake: int
-    referee_snowflakes: DotDict = field(default_factory=DotDict)
-    streamers: DotDict = field(default_factory=DotDict)
+    referee_snowflakes: list[int] = field(default_factory=list)
+    streamers: dict[int, str] = field(default_factory=dict)
 
     reporter_snowflake: int
     reported_at: datetime.datetime
@@ -47,5 +44,3 @@ class Game(DatabaseModel):
 
     created_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
     updated_at: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
-
-    player_stats: DotDict[int, PlayerStat] = field(default_factory=DotDict, exclude=True)
