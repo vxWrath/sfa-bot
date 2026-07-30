@@ -8,7 +8,7 @@ Usage::
     await cache.connect()
 
     # All methods use path-based keys:
-    await cache.set("sfa", "row", "players", "456", value=data, ttl=300)
+    await cache.set("sfa", "row", "players", "456", value=data, ex=300)
     profile = await cache.get("sfa", "profile", "player", "456", cls=PlayerProfile)
 
     # Multi-key delete takes raw key strings (use key_from_path):
@@ -279,8 +279,8 @@ class Cache:
             logger.warning("Redis EXISTS failed for key %r", key, exc_info=True)
             return False
 
-    async def expire(self, *path: Any, ttl: int, **redis_kwargs: Any) -> bool:
-        """Set or update the TTL (in seconds) on an existing key.
+    async def expire(self, *path: Any, ex: int, **redis_kwargs: Any) -> bool:
+        """Set or update the expiry (in seconds) on an existing key.
 
         Returns ``True`` if the timeout was set, ``False`` if the key doesn't
         exist or on Redis error.
@@ -289,7 +289,7 @@ class Cache:
         key = self.key_from_path(*path)
 
         try:
-            return await self.redis.expire(key, ttl, **redis_kwargs)
+            return await self.redis.expire(key, ex, **redis_kwargs)
         except RedisError:
             logger.warning("Redis EXPIRE failed for key %r", key, exc_info=True)
             return False
