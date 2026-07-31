@@ -1,29 +1,22 @@
-name: CI
+"""${message}
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+Revision ID: ${up_revision}
+Revises:     ${down_revision | comma,n}
+Created:     ${create_date.strftime('%Y-%m-%d')}
+"""
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.14"
-      - run: uv sync --group dev
-      - run: uv run ruff check
-      - run: uv run ruff format --check
+from alembic import op
+import sqlalchemy as sa
+${imports if imports else ""}
 
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.14"
-      - run: uv sync --group dev
-      - run: uv run pyright
+revision: str = ${repr(up_revision)}
+down_revision: str | None = ${repr(down_revision)}
+branch_labels = ${repr(branch_labels)}
+depends_on = ${repr(depends_on)}
+
+def upgrade() -> None:
+    ${upgrades if upgrades else "pass"}
+
+
+def downgrade() -> None:
+    ${downgrades if downgrades else "pass"}
