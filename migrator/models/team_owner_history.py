@@ -11,7 +11,7 @@ __all__ = [
 class TeamOwnerHistory(Base):
     """Ownership change log - tracks who owned a team and when."""
 
-    __tablename__ = "team_owner"
+    __tablename__ = "team_owner_history"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
 

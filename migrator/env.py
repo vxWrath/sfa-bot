@@ -6,6 +6,11 @@ DATABASE_URL is read from the environment; the scheme is normalised to
 """
 
 import os
+import sys
+from pathlib import Path
+
+# Alembic runs with cwd at the project root, so migrator/ isn't on sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from alembic import context
 from models import Base

@@ -61,15 +61,15 @@ class Manager:
 
     @staticmethod
     def info(msg: str) -> None:
-        print(f"{CYAN}➜{RESET} {msg}")
+        print(f"{CYAN}>{RESET} {msg}")
 
     @staticmethod
     def ok(msg: str) -> None:
-        print(f"  {GREEN}✓{RESET} {msg}")
+        print(f"  {GREEN}OK{RESET} {msg}")
 
     @staticmethod
     def fail(msg: str) -> NoReturn:
-        print(f"  {RED}✗{RESET} {msg}")
+        print(f"  {RED}ERR{RESET} {msg}")
         sys.exit(1)
 
     @staticmethod
