@@ -23,9 +23,12 @@ def get_stage() -> str:
     return stage.casefold()
 
 
+_PRODUCTION_STAGES: frozenset[str] = frozenset({"prod", "production"})
+
+
 def is_production() -> bool:
-    return get_stage() == "prod"
+    return get_stage() in _PRODUCTION_STAGES
 
 
 def is_dev() -> bool:
-    return get_stage() != "prod"
+    return get_stage() == "dev"

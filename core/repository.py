@@ -60,10 +60,10 @@ class Repository[R: Row]:
     def from_record(self, record: asyncpg.Record | None) -> R | None:
         if record is None:
             return None
-        return msgspec.convert(dict(record), type=self.row_cls)
+        return msgspec.convert(record, type=self.row_cls, from_attributes=True)
 
     def from_records(self, records: Sequence[asyncpg.Record]) -> list[R]:
-        return [msgspec.convert(dict(r), type=self.row_cls) for r in records]
+        return [msgspec.convert(r, type=self.row_cls, from_attributes=True) for r in records]
 
     # -- reads -----------------------------------------------------------
 

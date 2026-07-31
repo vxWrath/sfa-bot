@@ -146,5 +146,5 @@ def get_logger(name: str, *, level: int | None = logging.INFO) -> logging.Logger
 
 
 def _is_dev_mode() -> bool:
-    val = os.environ.get("SFA_ENV", "development")
+    val = os.environ.get("STAGE", "dev")
     return val.casefold() != "prod"

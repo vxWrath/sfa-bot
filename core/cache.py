@@ -34,8 +34,9 @@ from typing import (
 
 import msgspec
 import orjson
-from redis.asyncio import ConnectionPool, RedisError
+from redis.asyncio import ConnectionPool
 from redis.asyncio import Redis as AsyncRedis
+from redis.asyncio import RedisError
 
 from .env import get_env
 from .exceptions import SFAException
@@ -69,7 +70,7 @@ class CacheOptions(TypedDict, total=False):
 class Cache:
     """Redis cache connection manager.
 
-    Mirrors the ``Database`` class pattern: pool management, connect/close/terminate,
+    Mirrors the ``Database`` class pattern: pool management, connect/close,
     and low-level data operations.  All methods catch Redis errors and degrade
     gracefully - the bot must work without Redis.
 
@@ -155,24 +156,19 @@ class Cache:
         if self._redis is None:
             return
 
-        await self._redis.aclose()
-        self._redis = None
+        async with self._connection_lock:
+            if self._redis is None:
+                return
+
+            pool = self._redis.connection_pool
+            await self._redis.aclose()
+
+            if pool is not None:
+                await pool.disconnect()
+
+            self._redis = None
 
         logger.info("Redis pool closed")
-
-    async def terminate(self) -> None:
-        """Force-close the Redis connection pool without waiting for in-flight commands."""
-
-        if self._redis is None:
-            return
-
-        pool = self._redis.connection_pool
-        if pool is not None:
-            await pool.disconnect()
-
-        self._redis = None
-
-        logger.info("Redis pool terminated")
 
     @property
     def redis(self) -> AsyncRedis:

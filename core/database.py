@@ -70,6 +70,10 @@ async def postgres_init(connection: asyncpg.Connection) -> None:
         schema="pg_catalog",
         format="text",
     )
+    
+class GetAttrRecord(asyncpg.Record):
+    def __getattr__(self, name: str) -> Any:
+        return self[name]
 
 
 class DatabaseOptions(TypedDict, total=False):
@@ -125,6 +129,7 @@ class Database:
                         statement_cache_size=self._statement_cache_size,
                         max_queries=self._max_queries,
                         init=self._init,
+                        record_class=GetAttrRecord,
                     )
 
                     logger.info("Postgres pool created (min=%d, max=%d)", self._min_size, self._max_size)
