@@ -35,11 +35,11 @@ services:
         condition: service_healthy
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@postgres:{POSTGRES_PORT}/{POSTGRES_DB}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:{REDIS_PORT}/{REDIS_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:${REDIS_PORT}/${REDIS_DB}
     volumes:
       - ./config.toml:/app/config.toml:ro
-    restart: unless-stopped
+    restart: no
 
   prometheus:
     image: prom/prometheus:latest

@@ -14,4 +14,4 @@ COPY core/ ./core/
 COPY sfa_bot/ ./sfa_bot/
 COPY config.toml ./
 
-CMD ["uv", "run", "python", "-m", "sfa_bot"]
+CMD ["uv", "run", "--no-sync", "python", "-m", "sfa_bot"]

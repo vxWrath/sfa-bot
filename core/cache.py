@@ -448,10 +448,13 @@ class Cache:
         if not data:
             return 0
 
+        # JSON-encode each value so hash_get can decode with orjson.loads.
+        encoded = {k: orjson.dumps(v) for k, v in data.items()}
+
         try:
             async with self.redis.pipeline() as pipe:
-                await pipe.hset(key, mapping=data, **redis_kwargs)  # type: ignore
-                await pipe.expire(key, time=redis_kwargs.pop("ex", 300))
+                await pipe.hset(key, mapping=encoded)  # type: ignore
+                await pipe.expire(key, time=redis_kwargs.pop("ex", 300), **redis_kwargs)
 
                 commands = await pipe.execute()
                 return commands[0]

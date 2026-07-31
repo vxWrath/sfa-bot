@@ -5,6 +5,8 @@ from .dot_dict import *
 from .env import *
 from .exceptions import *
 from .logging import *
+from .models import *
 from .repository import *
 from .services import *
+from .structs import *
 from .utils import *

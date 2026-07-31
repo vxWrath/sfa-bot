@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-__all__ = ["get_logger", "install_asyncio_exception_handler", "install_excepthook"]
+__all__ = ["configure_root_logger", "get_logger", "install_asyncio_exception_handler", "install_excepthook"]
 
 IS_ROOT_CONFIGURED: bool = False
 

@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import struct
 from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from typing import Any, Literal, TypedDict, Unpack
@@ -55,6 +56,23 @@ def _datetime_decoder(dt_str: str) -> datetime.datetime:
     return datetime.datetime.fromisoformat(fixed)
 
 
+# Postgres binary format: 8-byte big-endian, microseconds since 2000-01-01 UTC.
+_POSTGRES_EPOCH = datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC)
+
+
+def _datetime_binary_encoder(dt: datetime.datetime) -> bytes:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.UTC)
+    delta = dt - _POSTGRES_EPOCH
+    microseconds = int(delta.total_seconds() * 1_000_000)
+    return struct.pack(">q", microseconds)
+
+
+def _datetime_binary_decoder(data: bytes) -> datetime.datetime:
+    (microseconds,) = struct.unpack(">q", data)
+    return _POSTGRES_EPOCH + datetime.timedelta(microseconds=microseconds)
+
+
 async def postgres_init(connection: asyncpg.Connection) -> None:
     await connection.set_type_codec(
         "jsonb",
@@ -70,11 +88,13 @@ async def postgres_init(connection: asyncpg.Connection) -> None:
         schema="pg_catalog",
         format="text",
     )
-
-
-class GetAttrRecord(asyncpg.Record):
-    def __getattr__(self, name: str) -> Any:
-        return self[name]
+    await connection.set_type_codec(
+        "timestamptz",
+        encoder=_datetime_binary_encoder,
+        decoder=_datetime_binary_decoder,
+        schema="pg_catalog",
+        format="binary",
+    )
 
 
 class DatabaseOptions(TypedDict, total=False):
@@ -130,7 +150,6 @@ class Database:
                         statement_cache_size=self._statement_cache_size,
                         max_queries=self._max_queries,
                         init=self._init,
-                        record_class=GetAttrRecord,
                     )
 
                     logger.info("Postgres pool created (min=%d, max=%d)", self._min_size, self._max_size)
@@ -222,7 +241,7 @@ class Database:
                 table,
                 records=records,
                 columns=columns,
-                schema=schema_name,
+                schema_name=schema_name,
                 timeout=timeout,
             )
 
