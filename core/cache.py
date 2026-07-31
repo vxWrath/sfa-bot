@@ -27,7 +27,6 @@ import asyncio
 from collections.abc import Iterable
 from typing import (
     Any,
-    NotRequired,
     TypedDict,
     Unpack,
     overload,
@@ -60,11 +59,11 @@ class CacheNotConnected(SFAException):
     """Raised when a cache operation is attempted before connecting to Redis."""
 
 
-class CacheOptions(TypedDict):
-    max_connections: NotRequired[int]
-    command_timeout: NotRequired[float]
-    connect_retries: NotRequired[int]
-    connect_retry_delay: NotRequired[float]
+class CacheOptions(TypedDict, total=False):
+    max_connections: int
+    command_timeout: float
+    connect_retries: int
+    connect_retry_delay: float
 
 
 class Cache:

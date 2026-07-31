@@ -1,6 +1,15 @@
 from typing import TYPE_CHECKING
 
-from ..models import PlayerProfile
+from ..models import (
+    AwardAssignmentRow,
+    ContractRow,
+    GameRow,
+    PlayerProfile,
+    PlayerRow,
+    PlayerSanctionRow,
+    PlayerStatRow,
+    TeamOwnerHistoryRow,
+)
 
 if TYPE_CHECKING:
     from ..database import Database
@@ -16,13 +25,13 @@ class PlayerService:
     def __init__(self, database: "Database") -> None:
         self.database = database
 
-        self.players = database.get_repository("player")
-        self.contracts = database.get_repository("contract")
-        self.player_sanctions = database.get_repository("player_sanction")
-        self.team_owner_history = database.get_repository("team_owner_history")
-        self.award_assignments = database.get_repository("award_assignment")
-        self.games = database.get_repository("game")
-        self.player_stats = database.get_repository("player_stat")
+        self.players = database.get_repository(PlayerRow)
+        self.contracts = database.get_repository(ContractRow)
+        self.player_sanctions = database.get_repository(PlayerSanctionRow)
+        self.team_owner_history = database.get_repository(TeamOwnerHistoryRow)
+        self.award_assignments = database.get_repository(AwardAssignmentRow)
+        self.games = database.get_repository(GameRow)
+        self.player_stats = database.get_repository(PlayerStatRow)
 
     async def get_profile(self, snowflake: int) -> PlayerProfile:
         """Fetch a player and all related records."""

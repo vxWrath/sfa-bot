@@ -1,13 +1,15 @@
 import datetime
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "PlayerRow",
 ]
 
 
-class PlayerRow(Struct, dict=True, kw_only=True):
+class PlayerRow(Row, dict=True, kw_only=True):
     """Discord user linked to a Roblox account."""
 
     snowflake: int

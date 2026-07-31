@@ -1,13 +1,15 @@
 import datetime
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "TeamSeasonStageRow",
 ]
 
 
-class TeamSeasonStageRow(Struct, dict=True, kw_only=True):
+class TeamSeasonStageRow(Row, dict=True, kw_only=True):
     """Per-stage snapshot: division, playoff round, or championship placement.
 
     One row per team per season per stage (1-9).

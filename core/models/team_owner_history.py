@@ -1,13 +1,15 @@
 import datetime
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "TeamOwnerHistoryRow",
 ]
 
 
-class TeamOwnerHistoryRow(Struct, dict=True, kw_only=True):
+class TeamOwnerHistoryRow(Row, dict=True, kw_only=True):
     """Ownership change log - tracks who owned a team and when."""
 
     id: int

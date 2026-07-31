@@ -1,6 +1,15 @@
 from typing import TYPE_CHECKING
 
-from ..models import TeamProfile
+from ..models import (
+    AwardAssignmentRow,
+    ContractRow,
+    GameRow,
+    PlayerStatRow,
+    TeamOwnerHistoryRow,
+    TeamProfile,
+    TeamRow,
+    TeamSeasonStageRow,
+)
 
 if TYPE_CHECKING:
     from ..database import Database
@@ -16,13 +25,13 @@ class TeamService:
     def __init__(self, database: "Database") -> None:
         self.database = database
 
-        self.teams = database.get_repository("team")
-        self.award_assignments = database.get_repository("award_assignment")
-        self.contracts = database.get_repository("contract")
-        self.games = database.get_repository("game")
-        self.player_stats = database.get_repository("player_stat")
-        self.team_owner_history = database.get_repository("team_owner_history")
-        self.team_season_stages = database.get_repository("team_season_stage")
+        self.teams = database.get_repository(TeamRow)
+        self.award_assignments = database.get_repository(AwardAssignmentRow)
+        self.contracts = database.get_repository(ContractRow)
+        self.games = database.get_repository(GameRow)
+        self.player_stats = database.get_repository(PlayerStatRow)
+        self.team_owner_history = database.get_repository(TeamOwnerHistoryRow)
+        self.team_season_stages = database.get_repository(TeamSeasonStageRow)
 
     async def get_profile(self, team_id: int) -> TeamProfile:
         """Fetch a team and all related records."""

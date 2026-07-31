@@ -1,13 +1,15 @@
 import datetime
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "AwardRow",
 ]
 
 
-class AwardRow(Struct, dict=True, kw_only=True):
+class AwardRow(Row, dict=True, kw_only=True):
     """Custom awards - can be seasonal or HOF-style (no season)."""
 
     id: int

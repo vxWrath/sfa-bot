@@ -1,13 +1,15 @@
 import datetime
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "AwardAssignmentRow",
 ]
 
 
-class AwardAssignmentRow(Struct, dict=True, kw_only=True):
+class AwardAssignmentRow(Row, dict=True, kw_only=True):
     """Awards granted to players or teams."""
 
     id: int

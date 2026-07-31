@@ -1,14 +1,16 @@
 import datetime
 from typing import Any
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "PlayerSanctionRow",
 ]
 
 
-class PlayerSanctionRow(Struct, dict=True, kw_only=True):
+class PlayerSanctionRow(Row, dict=True, kw_only=True):
     """Suspensions and team-owner blacklists.
 
     sanction_type enum: 0=suspension, 1=team owner blacklist

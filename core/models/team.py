@@ -1,13 +1,15 @@
 import datetime
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "TeamRow",
 ]
 
 
-class TeamRow(Struct, dict=True, kw_only=True):
+class TeamRow(Row, dict=True, kw_only=True):
     """Franchise with division tracking."""
 
     id: int

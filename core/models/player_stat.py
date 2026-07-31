@@ -1,14 +1,16 @@
 import datetime
 from typing import Any
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "PlayerStatRow",
 ]
 
 
-class PlayerStatRow(Struct, dict=True, kw_only=True):
+class PlayerStatRow(Row, dict=True, kw_only=True):
     """Per-player per-game position stats stored as JSONB."""
 
     id: int

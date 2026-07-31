@@ -1,13 +1,15 @@
 import datetime
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "GameRow",
 ]
 
 
-class GameRow(Struct, dict=True, kw_only=True):
+class GameRow(Row, dict=True, kw_only=True):
     """Match results with referees, streamers, and score reporting."""
 
     id: int

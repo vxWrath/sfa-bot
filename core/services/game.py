@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from ..models import GameProfile
+from ..models import GameProfile, GameRow, PlayerStatRow
 
 if TYPE_CHECKING:
     from ..database import Database
@@ -16,8 +16,8 @@ class GameService:
     def __init__(self, database: "Database") -> None:
         self.database = database
 
-        self.games = database.get_repository("game")
-        self.player_stats = database.get_repository("player_stat")
+        self.games = database.get_repository(GameRow)
+        self.player_stats = database.get_repository(PlayerStatRow)
 
     async def get_profile(self, game_id: int) -> GameProfile:
         """Fetch a game and all related records."""

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from ..models import AwardProfile
+from ..models import AwardAssignmentRow, AwardProfile, AwardRow
 
 if TYPE_CHECKING:
     from ..database import Database
@@ -16,8 +16,8 @@ class AwardService:
     def __init__(self, database: "Database") -> None:
         self.database = database
 
-        self.awards = database.get_repository("award")
-        self.award_assignments = database.get_repository("award_assignment")
+        self.awards = database.get_repository(AwardRow)
+        self.award_assignments = database.get_repository(AwardAssignmentRow)
 
     async def get_profile(self, award_id: int) -> AwardProfile:
         """Fetch an award and all related records."""

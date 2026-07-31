@@ -2,7 +2,7 @@ import asyncio
 import datetime
 from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
-from typing import Any, Literal, NotRequired, TypedDict, Unpack, overload
+from typing import Any, Literal, TypedDict, Unpack
 
 import asyncpg
 import orjson
@@ -10,20 +10,7 @@ import orjson
 from .env import get_env
 from .exceptions import SFAException
 from .logging import get_logger
-from .models import (
-    AwardAssignmentRow,
-    AwardRow,
-    CoachRow,
-    ContractRow,
-    GameRow,
-    PlayerRow,
-    PlayerSanctionRow,
-    PlayerStatRow,
-    SeasonRow,
-    TeamOwnerHistoryRow,
-    TeamRow,
-    TeamSeasonStageRow,
-)
+from .models import Row
 from .repository import Repository
 
 logger = get_logger("database")
@@ -35,6 +22,14 @@ class DatabaseError(SFAException):
 
 class DatabaseNotConnected(SFAException):
     """Raised when a database operation is attempted before connecting to the database."""
+
+
+IsolationLevel = Literal[
+    "read_committed",
+    "repeatable_read",
+    "serializable",
+    "read_uncommitted",
+]
 
 
 # Dict-like encoders/decoders
@@ -77,16 +72,16 @@ async def postgres_init(connection: asyncpg.Connection) -> None:
     )
 
 
-class DatabaseOptions(TypedDict):
-    min_size: NotRequired[int]
-    max_size: NotRequired[int]
-    max_inactive_connection_lifetime: NotRequired[float]
-    command_timeout: NotRequired[float]
-    statement_cache_size: NotRequired[int]
-    max_queries: NotRequired[int]
-    init: NotRequired[Any]
-    connect_retries: NotRequired[int]
-    connect_retry_delay: NotRequired[float]
+class DatabaseOptions(TypedDict, total=False):
+    min_size: int
+    max_size: int
+    max_inactive_connection_lifetime: float
+    command_timeout: float
+    statement_cache_size: int
+    max_queries: int
+    init: Any
+    connect_retries: int
+    connect_retry_delay: float
 
 
 class Database:
@@ -105,47 +100,7 @@ class Database:
 
         self._pool: asyncpg.Pool | None = None
         self._connection_lock = asyncio.Lock()
-
-        # fmt: off
-        self._repositories: dict[str, Repository[Any]] = {
-            "award_assignment": Repository(
-                self, table="award_assignments", model_cls=AwardAssignmentRow, primary_key="id"
-            ),
-            "award": Repository(
-                self, table="awards", model_cls=AwardRow, primary_key="id"
-            ),
-            "coach": Repository(
-                self, table="coaches", model_cls=CoachRow, primary_key="id"
-            ),
-            "contract": Repository(
-                self, table="contracts", model_cls=ContractRow, primary_key="id"
-            ),
-            "game": Repository(
-                self, table="games", model_cls=GameRow, primary_key="id"
-            ),
-            "player_sanction": Repository(
-                self, table="player_sanctions", model_cls=PlayerSanctionRow, primary_key="id"
-            ),
-            "player_stat": Repository(
-                self, table="player_stats", model_cls=PlayerStatRow, primary_key="id"
-            ),
-            "player": Repository(
-                self, table="players", model_cls=PlayerRow, primary_key="snowflake"
-            ),
-            "season": Repository(
-                self, table="seasons", model_cls=SeasonRow, primary_key="id"
-            ),
-            "team_owner_history": Repository(
-                self, table="team_owner_histories", model_cls=TeamOwnerHistoryRow, primary_key="id"
-            ),
-            "team_season_stage": Repository(
-                self, table="team_season_stages", model_cls=TeamSeasonStageRow, primary_key="id"
-            ),
-            "team": Repository(
-                self, table="teams", model_cls=TeamRow, primary_key="id"
-            ),
-        }
-        # fmt: on
+        self._repositories = {row: Repository(self, row_cls=row) for row in Row.__subclasses__()}
 
     async def connect(self) -> None:
         """Connect to the database."""
@@ -174,7 +129,12 @@ class Database:
 
                     logger.info("Postgres pool created (min=%d, max=%d)", self._min_size, self._max_size)
                     return
-                except (OSError, asyncpg.PostgresError) as e:
+                except (
+                    OSError,
+                    asyncpg.CannotConnectNowError,
+                    asyncpg.ConnectionDoesNotExistError,
+                    asyncpg.TooManyConnectionsError,
+                ) as e:
                     last_exception = e
                     logger.warning(
                         "Postgres connection attempt %d/%d failed: %s",
@@ -198,17 +158,6 @@ class Database:
         self._pool = None
 
         logger.info("Postgres pool closed")
-
-    async def terminate(self) -> None:
-        """Terminate the database connection. Does not wait for queries to finish."""
-
-        if self._pool is None:
-            return
-
-        self._pool.terminate()
-        self._pool = None
-
-        logger.info("Postgres pool terminated")
 
     @property
     def pool(self) -> asyncpg.Pool:
@@ -275,7 +224,7 @@ class Database:
     async def transaction(
         self,
         *,
-        isolation: str = "read_committed",
+        isolation: IsolationLevel = "read_committed",
         readonly: bool = False,
         deferrable: bool = False,
     ) -> AsyncGenerator[asyncpg.Connection]:
@@ -285,35 +234,6 @@ class Database:
             async with c.transaction(isolation=isolation, readonly=readonly, deferrable=deferrable):
                 yield c  # type: ignore
 
-    @overload
-    def get_repository(self, table: Literal["award_assignment"]) -> Repository[AwardAssignmentRow]: ...
-    @overload
-    def get_repository(self, table: Literal["award"]) -> Repository[AwardRow]: ...
-    @overload
-    def get_repository(self, table: Literal["coach"]) -> Repository[CoachRow]: ...
-    @overload
-    def get_repository(self, table: Literal["contract"]) -> Repository[ContractRow]: ...
-    @overload
-    def get_repository(self, table: Literal["game"]) -> Repository[GameRow]: ...
-    @overload
-    def get_repository(self, table: Literal["player_sanction"]) -> Repository[PlayerSanctionRow]: ...
-    @overload
-    def get_repository(self, table: Literal["player_stat"]) -> Repository[PlayerStatRow]: ...
-    @overload
-    def get_repository(self, table: Literal["player"]) -> Repository[PlayerRow]: ...
-    @overload
-    def get_repository(self, table: Literal["season"]) -> Repository[SeasonRow]: ...
-    @overload
-    def get_repository(self, table: Literal["team_owner_history"]) -> Repository[TeamOwnerHistoryRow]: ...
-    @overload
-    def get_repository(self, table: Literal["team_season_stage"]) -> Repository[TeamSeasonStageRow]: ...
-    @overload
-    def get_repository(self, table: Literal["team"]) -> Repository[TeamRow]: ...
-
-    def get_repository(self, table: str) -> Repository[Any]:
+    def get_repository[R: Row](self, row: type[R]) -> Repository[R]:
         """Get a repository for a table."""
-
-        if table not in self._repositories:
-            raise DatabaseError(f"No repository for table '{table}'")
-
-        return self._repositories[table]
+        return self._repositories[row]  # type: ignore

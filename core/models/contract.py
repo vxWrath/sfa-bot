@@ -1,14 +1,16 @@
 import datetime
 from typing import Any
 
-from msgspec import Struct, field
+from msgspec import field
+
+from .base import Row
 
 __all__ = [
     "ContractRow",
 ]
 
 
-class ContractRow(Struct, dict=True, kw_only=True):
+class ContractRow(Row, dict=True, kw_only=True):
     """Active roster contract record.
 
     length_type enum: 0=games, 1=weeks, 2=months, 3=seasons
