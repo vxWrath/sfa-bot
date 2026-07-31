@@ -53,7 +53,7 @@ indent-style = "space"
 [tool.pyright]
 pythonVersion = "3.14.6"
 typeCheckingMode = "basic"
-include = []
-exclude = ["**/node_modules", "**/.venv", "**/__pycache__", "**/.*"]
+include = ["core", "sfa_bot"]
+exclude = ["migrations", "**/node_modules", "**/.venv", "**/__pycache__", "**/.*"]
 venvPath = "."
 venv = ".venv"
