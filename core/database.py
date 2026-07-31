@@ -70,7 +70,8 @@ async def postgres_init(connection: asyncpg.Connection) -> None:
         schema="pg_catalog",
         format="text",
     )
-    
+
+
 class GetAttrRecord(asyncpg.Record):
     def __getattr__(self, name: str) -> Any:
         return self[name]

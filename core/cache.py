@@ -34,9 +34,8 @@ from typing import (
 
 import msgspec
 import orjson
-from redis.asyncio import ConnectionPool
+from redis.asyncio import ConnectionPool, RedisError
 from redis.asyncio import Redis as AsyncRedis
-from redis.asyncio import RedisError
 
 from .env import get_env
 from .exceptions import SFAException
