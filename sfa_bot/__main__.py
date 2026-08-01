@@ -11,16 +11,26 @@ from core import (
     Cache,
     Database,
     League,
-    configure_root_logger,
     get_env,
     get_logger,
     install_asyncio_exception_handler,
     install_excepthook,
 )
 
+logger = get_logger("main")
+
+try:
+    import uvloop  # type: ignore
+
+    loop_factory = uvloop.new_event_loop
+    logger.info("Using uvloop")
+
+except ImportError:
+    loop_factory = None
+    logger.info("Using asyncio")
+
 
 def shutdown(bot: SFABot):
-    logger = get_logger("main")
     logger.warning("Received shutdown signal, exiting...")
 
     try:
@@ -30,11 +40,8 @@ def shutdown(bot: SFABot):
 
 
 async def main() -> None:
-    configure_root_logger()
     install_excepthook()
     install_asyncio_exception_handler()
-
-    logger = get_logger("main")
 
     token = get_env("DISCORD_TOKEN")
 
@@ -52,6 +59,31 @@ async def main() -> None:
 
     setup_discord_logger()
 
+    await bot.cache.connect()
+    await bot.database.connect()
+
+    bot.super_init()
+
+    async with bot:
+        try:
+            await bot.login(token)
+            logger.info("Logged in as %s", bot.user)
+
+            await bot.connect()
+        except Exception as e:
+            logger.critical("Failed to start bot", exc_info=e)
+            raise
+
+    logger.info("Shutting down")
+    await bot.session.close()
+    await bot.database.close()
+    await bot.cache.close()
+
+    if bot._closing_task is not None:
+        await bot._closing_task
+
+    logger.info("Bot shutdown complete")
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(), loop_factory=loop_factory)

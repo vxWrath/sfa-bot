@@ -1,13 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
-from enum import IntEnum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Self,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, Self, final
 
 import discord
 from discord.ui import (
@@ -36,7 +30,6 @@ __all__ = (
     "BaseView",
     "DeferOptions",
     "InteractionOptions",
-    "PlayerKey",
     "response",
     "view_interaction_check",
 )
@@ -57,11 +50,6 @@ class MemberOnly(SFAException):
         super().__init__(f"This {'interaction' if interaction else 'command'} can only be used by a member.")
 
 
-class PlayerKey(IntEnum):
-    DEMANDS = 1 << 0
-    # room for 3 more flags (bits 1-3)
-
-
 class DeferOptions(Struct):
     defer: bool = field(default=False)
     ephemeral: bool = field(default=False)
@@ -79,37 +67,22 @@ class InteractionOptions(Struct):
     defer_options: DeferOptions = field(default_factory=DeferOptions)
     modal_response: bool = field(default=False)
 
-    player_keys: set[PlayerKey] | None = field(default=None)
-
     def to_custom_id(self) -> str:
-        """Encode options into a 4-char hex string (16 bits).
+        """Encode options into a 1-char hex string (4 bits).
 
         Bit layout (LSB → MSB)::
 
             Bits  0-2  : DeferOptions (defer, ephemeral, thinking)
             Bit   3    : modal_response
-            Bits  4-9  : league_keys (6 flags)
-            Bit   10   : league_keys retrieve (not None)
-            Bit   11   : player_keys retrieve (not None)
-            Bits  12-15: player_keys (4 flags)
         """
         value = self.defer_options.to_bits()  # bits 0-2
         value |= self.modal_response << 3  # bit  3
 
-        if self.player_keys is not None:
-            value |= 1 << 11  # bit  11
-
-            player_bits = 0
-            for k in self.player_keys:
-                player_bits |= k.value
-
-            value |= player_bits << 12  # bits 12-15
-
-        return f"{value:04x}"
+        return f"{value:01x}"
 
     @classmethod
     def from_custom_id(cls, custom_id: str) -> Self:
-        """Decode a 4-char hex string back into :class:`InteractionOptions`.
+        """Decode a 1-char hex string back into :class:`InteractionOptions`.
 
         Returns a default instance if the hex string is malformed.
         """
@@ -126,20 +99,13 @@ class InteractionOptions(Struct):
 
         modal_response = _shift_bit(value, 3)
 
-        player_retrieve = _shift_bit(value, 11)
-        player_data = None
-        if player_retrieve:
-            player_bits = (value >> 12) & 0xF
-            player_data = {key for key in PlayerKey if player_bits & key.value}
-
         return cls(
             defer_options=defer_options,
             modal_response=modal_response,
-            player_keys=player_data,
         )
 
 
-BASE_TEMPLATE = r"([0-9a-fA-F]{4})"
+BASE_TEMPLATE = r"([0-9a-fA-F])"
 
 
 class BaseItem(ABC, DynamicItem[BaseT], template=BASE_TEMPLATE):
@@ -180,6 +146,7 @@ class BaseItem(ABC, DynamicItem[BaseT], template=BASE_TEMPLATE):
         return self.__class__.__original_template__
 
     @classmethod
+    @final
     async def from_custom_id(
         cls: type[Self], interaction: discord.Interaction["SFABot"], item: Item[Any], match: re.Match[str], /
     ) -> Self:

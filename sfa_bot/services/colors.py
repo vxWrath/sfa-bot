@@ -1,11 +1,11 @@
-__all__ = ["Color", "CommonEmoji"]
-
 from typing import Self
 
 import discord
 
+__all__ = ["BotEmoji", "Color"]
 
-class CommonEmoji:
+
+class BotEmoji:
     FAIL = "\N{CROSS MARK}"
     SUCCESS = "\N{WHITE HEAVY CHECK MARK}"
     LOADING = "\N{HOURGLASS WITH FLOWING SAND}"

@@ -1,2 +1,26 @@
-# Guild ID - replace with your server's snowflake
+# Guild ID — replace with your server's snowflake
 snowflake = 0
+
+# -- roles ---------------------------------------------------------------------
+commissioner_role_id = 0
+vice_role_id = 0
+staff_stats_role_id = 0
+staff_media_role_id = 0
+staff_mods_role_id = 0
+staff_justice_role_id = 0
+team_owner_role_id = 0
+
+# -- channels ------------------------------------------------------------------
+scheduling_channel_id = 0
+gametimes_channel_id = 0
+lfp_channel_id = 0
+media_channel_ids = []
+alerts_channel_id = 0
+
+# -- alerts --------------------------------------------------------------------
+# Each entry must match an AlertEvent value (see sfa_bot/services/alerts.py).
+# Example: enabled_alerts = ["team_owner_appointed_alert"]
+enabled_alerts = []
+
+# -- misc ----------------------------------------------------------------------
+logging_webhook_url = ""

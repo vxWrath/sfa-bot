@@ -1,0 +1,6 @@
+[
+    {
+        "event": "team_owner_appointed_alert",
+        "text": "## Team Owner Appointed\n{member} has been appointed {team_owner} of the **{team}** by {appointer}"
+    }
+]

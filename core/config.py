@@ -1,8 +1,8 @@
-"""Guild configuration loaded from config.toml at startup.
+"""League-wide settings loaded from config.toml at startup.
 
 Usage::
 
-    from sfa_bot.config import League
+    from core import League
 
     League.load()
     print(League.snowflake)
@@ -25,7 +25,29 @@ class League:
     Call ``League.save()`` to write changes back to disk.
     """
 
-    snowflake: int = 0
+    # -- guild -----------------------------------------------------------------
+    snowflake: int
+
+    # -- roles -----------------------------------------------------------------
+    commissioner_role_id: int
+    vice_role_id: int
+    staff_stats_role_id: int
+    staff_media_role_id: int
+    staff_mods_role_id: int
+    staff_justice_role_id: int
+
+    # -- channels --------------------------------------------------------------
+    scheduling_channel_id: int
+    gametimes_channel_id: int
+    lfp_channel_id: int
+    media_channel_ids: list[int]
+    alerts_channel_id: int
+
+    # -- alerts ----------------------------------------------------------------
+    enabled_alerts: list[str]
+
+    # -- misc ------------------------------------------------------------------
+    logging_webhook_url: str
 
     @classmethod
     def load(cls) -> None:

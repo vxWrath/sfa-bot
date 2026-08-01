@@ -52,3 +52,6 @@ node_modules/
 
 # Config files
 config.toml
+
+# Misc
+.commands_synced

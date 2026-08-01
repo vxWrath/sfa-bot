@@ -1,4 +1,3 @@
-import asyncio
 import importlib.util
 import traceback
 from collections.abc import Sequence
@@ -22,9 +21,7 @@ from core import (
     Cache,
     CommandNotFound,
     Database,
-    DotDict,
     League,
-    PlayerRow,
     StoredCommand,
     get_env,
     get_logger,
@@ -34,7 +31,6 @@ from core import (
 from .alerts import AlertEvent, _send_alert
 from .colors import Color
 from .interaction import BaseItem, InteractionOptions, response
-from .utils import chunk_guild
 
 if TYPE_CHECKING:
     from .cooldowns import CooldownManager
@@ -74,7 +70,7 @@ class SFABot(commands.Bot):
             intents=intents,
             member_cache_flags=member_cache_flags,
             max_messages=None,
-            chunk_guilds_at_startup=False,
+            chunk_guilds_at_startup=True,
             allowed_installs=AppInstallationType(guild=True, user=False),
             activity=discord.Activity(
                 type=discord.ActivityType.watching,
@@ -83,12 +79,11 @@ class SFABot(commands.Bot):
         )
 
     async def setup_hook(self) -> None:
-        logger.info("setup_hook starting")
         await self.load_extensions()
 
         LEAGUE_GUILD = discord.Object(id=League.snowflake, type=discord.Guild)
 
-        sync_sentinel = Path("core/files/.commands_synced")
+        sync_sentinel = Path("files/.commands_synced")
         if not sync_sentinel.exists():
             if is_dev():
                 # Clear global commands
@@ -123,7 +118,7 @@ class SFABot(commands.Bot):
             timestamp=discord.utils.utcnow(),
         )
 
-        await _send_to_webhook(self.session, premium=True, embed=embed)
+        await _send_to_webhook(self.session, embed=embed)
 
     async def close(self) -> None:
         logger.info("Bot shutting down")
@@ -136,7 +131,7 @@ class SFABot(commands.Bot):
             timestamp=discord.utils.utcnow(),
         )
 
-        await _send_to_webhook(self.session, premium=True, embed=embed)
+        await _send_to_webhook(self.session, embed=embed)
 
         return await super().close()
 
@@ -275,18 +270,18 @@ class SFABot(commands.Bot):
         except KeyError:
             raise CommandNotFound(name) from None
 
-    async def send_alert(self, league: League, event: AlertEvent, color: Color | None = None, **kwargs: str) -> None:
-        await _send_alert(self, league, event, color=color, **kwargs)
+    async def send_alert(self, event: AlertEvent, color: Color | None = None, **kwargs: str) -> None:
+        await _send_alert(self, event, color=color, **kwargs)
 
 
-async def _send_to_webhook(session: aiohttp.ClientSession, premium: bool, embed: discord.Embed):
-    url = get_env("PREMIUM_CONTAINERS_WEBHOOK_URL") if premium else get_env("PEERLESS_CLUSTERS_WEBHOOK_URL")
+async def _send_to_webhook(session: aiohttp.ClientSession, embed: discord.Embed):
+    url = get_env("CONNECTION_WEBHOOK_URL")
 
     try:
         async with session.post(url, json={"embeds": [embed.to_dict()]}) as resp:
             resp.raise_for_status()
     except Exception as e:
-        logger.error("Failed to send webhook (%s)", "premium" if premium else "cluster", exc_info=e)
+        logger.error("Failed to send webhook", exc_info=e)
 
 
 class Tree(CommandTree[SFABot]):
@@ -311,8 +306,6 @@ class Tree(CommandTree[SFABot]):
 
             return False
 
-        data: DotDict[str, DotDict[str, Any]] = DotDict(interaction.data) if interaction.data else DotDict()  # type: ignore
-
         if interaction.command:
             options: InteractionOptions = interaction.command.extras.get("options", InteractionOptions())
         else:
@@ -322,52 +315,6 @@ class Tree(CommandTree[SFABot]):
             await interaction.response.defer(
                 ephemeral=options.defer_options.ephemeral, thinking=options.defer_options.thinking
             )
-
-        chunk_future: asyncio.Future[list[discord.Member]] | None = None
-
-        if interaction.guild:
-            if not interaction.guild.chunked:
-                chunk_future = await chunk_guild(interaction.guild, wait=False)
-
-                if not options.modal_response and not options.defer_options.defer:
-                    await interaction.response.defer(
-                        ephemeral=options.defer_options.ephemeral, thinking=options.defer_options.thinking
-                    )
-
-        player_ids: set[int] = set()
-        if options.player_keys is not None:
-            interaction.extras["players"] = {}
-            player_ids.add(interaction.user.id)
-
-            if data.has("resolved"):
-                for user_id, discord_user_data in (
-                    data.resolved.get("members") or data.resolved.get("users", {})
-                ).items():
-                    if (
-                        interaction.user.id == int(user_id)
-                        or discord_user_data.get("bot", False)
-                        or discord_user_data.get("user", {}).get("bot", False)
-                    ):
-                        continue
-
-                    player_ids.add(int(user_id))
-
-        if chunk_future is not None or player_ids:
-            try:
-                async with asyncio.timeout(15 if interaction.response.is_done() else 1.5):
-                    if player_ids:
-                        repo = self.client.database.get_repository(PlayerRow)
-                        players = await asyncio.shield(asyncio.gather(*(repo.produce_player(x) for x in player_ids)))
-
-                        for player in players:
-                            interaction.extras["players"][player.id] = player
-
-                    if chunk_future is not None:
-                        await asyncio.shield(chunk_future)
-
-            except TimeoutError:
-                logger.warning("Timeout while fetching data.")
-                return False
 
         return True
 

@@ -20,7 +20,6 @@ node_modules/
 
 # Design docs / planning
 plans/
-files/
 
 # Schema (not needed at runtime)
 .dbml
